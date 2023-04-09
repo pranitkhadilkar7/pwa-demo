@@ -1,5 +1,3 @@
-var defferedPromt
-
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing Service Worker', event)
 })
@@ -11,11 +9,5 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   console.log('[Service Worker] Fetching something ....', event)
-})
-
-self.addEventListener('beforeinstallprompt', (event) => {
-  console.log('beforeinstallprompt fired')
-  event.preventDefault()
-  defferedPromt = event
-  return false
+  event.respondWith(fetch(event.request))
 })
