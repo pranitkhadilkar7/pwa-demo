@@ -40,6 +40,13 @@ self.addEventListener('fetch', function(event) {
           return res
         } else {
           return fetch(event.request)
+            .then(res => {
+              return caches.open('dynamica')
+                .then(cache => {
+                  cache.put(event.request.url, res.clone())
+                  return res
+                })
+            })
         }
       })
   );
