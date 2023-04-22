@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'static-v9'
-const CACHE_DYNAMIC_NAME = 'dynamic-v4'
+const CACHE_STATIC_NAME = 'static-v10'
+const CACHE_DYNAMIC_NAME = 'dynamic-v5'
 const STATIC_FILES = [
   '/',
   '/index.html',
@@ -47,6 +47,15 @@ self.addEventListener('activate', function(event) {
   return self.clients.claim('');
 });
 
+function isInArray(string, array) {
+  for (let i = 0; i < array.length; i++) {
+    if (string === array[i]) {
+      return true
+    }
+  }
+  return false
+}
+
 self.addEventListener('fetch', (event) => {
   const url = 'https://httpbin.org/get'
   if (event.request.url.indexOf(url) > -1) {
@@ -60,11 +69,13 @@ self.addEventListener('fetch', (event) => {
             })
         })
     )
-  } else if (new RegExp('\\b' + STATIC_FILES.join('\\b|\\b') + '\\b').test(event.request.url)) {
+  } 
+  else if (isInArray(event.request.url, STATIC_FILES)) {
     event.respondWith(
       caches.match(event.request)
-    );
-  } else {
+    );   
+  } 
+  else {
     event.respondWith(
       caches.match(event.request)
         .then((res) => {
@@ -82,7 +93,7 @@ self.addEventListener('fetch', (event) => {
               .catch(err => {
                 return caches.open(CACHE_STATIC_NAME)
                   .then(cache => {
-                    if (event.request.url.indexOf('/help') > -1) {
+                    if (event.request.headers.get('accept').includes('text/html')) {
                       return cache.match('/offline.html')
                     }
                   })
