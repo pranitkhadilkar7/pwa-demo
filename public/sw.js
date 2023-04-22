@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'static-v6'
-const CACHE_DYNAMIC_NAME = 'dynamic'
+const CACHE_STATIC_NAME = 'static-v8'
+const CACHE_DYNAMIC_NAME = 'dynamic-v3'
 
 self.addEventListener('install', function(event) {
   console.log('[Service Worker] Installing Service Worker ...', event);
@@ -46,28 +46,93 @@ self.addEventListener('activate', function(event) {
   return self.clients.claim('');
 });
 
-self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.match(event.request)
-      .then((res) => {
-        if (res) {
-          return res
-        } else {
+self.addEventListener('fetch', (event) => {
+  const url = 'https://httpbin.org/get'
+  if (event.request.url.indexOf(url) > -1) {
+    event.respondWith(
+      caches.open(CACHE_DYNAMIC_NAME)
+        .then((cache) => {
           return fetch(event.request)
-            .then(res => {
-              return caches.open(CACHE_DYNAMIC_NAME)
-                .then(cache => {
-                  cache.put(event.request.url, res.clone())
-                  return res
-                })
+            .then((res) => {
+              cache.put(event.request, res.clone())
+              return res
             })
-            .catch(err => {
-              return caches.open(CACHE_STATIC_NAME)
-                .then(cache => {
-                  return cache.match('/offline.html')
-                })
-            })
-        }
-      })
-  );
-});
+        })
+    )
+  } else {
+    event.respondWith(
+      caches.match(event.request)
+        .then((res) => {
+          if (res) {
+            return res
+          } else {
+            return fetch(event.request)
+              .then(res => {
+                return caches.open(CACHE_DYNAMIC_NAME)
+                  .then(cache => {
+                    cache.put(event.request.url, res.clone())
+                    return res
+                  })
+              })
+              .catch(err => {
+                return caches.open(CACHE_STATIC_NAME)
+                  .then(cache => {
+                    return cache.match('/offline.html')
+                  })
+              })
+          }
+        })
+    );
+  }
+})
+
+// self.addEventListener('fetch', function(event) {
+//   event.respondWith(
+//     caches.match(event.request)
+//       .then((res) => {
+//         if (res) {
+//           return res
+//         } else {
+//           return fetch(event.request)
+//             .then(res => {
+//               return caches.open(CACHE_DYNAMIC_NAME)
+//                 .then(cache => {
+//                   cache.put(event.request.url, res.clone())
+//                   return res
+//                 })
+//             })
+//             .catch(err => {
+//               return caches.open(CACHE_STATIC_NAME)
+//                 .then(cache => {
+//                   return cache.match('/offline.html')
+//                 })
+//             })
+//         }
+//       })
+//   );
+// });
+
+// Cache network first approach
+// self.addEventListener('fetch', (event) => {
+//   event.respondWith(
+//     fetch(event.request)
+//     .then((res) => {
+//       return caches.open(CACHE_DYNAMIC_NAME)
+//         .then((cache) => {
+//           cache.put(event.request.url, res.clone())
+//           return res
+//         })
+//     })
+//       .catch((err) => {
+//         return caches.match(event.request)
+//       })
+//   )
+// })
+
+
+// Cache only strategy
+// self.addEventListener('fetch', function(event) {
+//   event.respondWith(
+//     caches.match(event.request)
+//   );
+// });
